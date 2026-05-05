@@ -1,0 +1,8 @@
+# Stripe webhook must be public (no authentication required)
+# Only validation: Stripe signature verification
+
+[env]
+name = "production"
+
+[build]
+# No build-specific config needed
