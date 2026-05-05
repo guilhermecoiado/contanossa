@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Delete } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Delete, X } from 'lucide-react';
 
 interface CalculatorModalProps {
   open: boolean;
@@ -92,9 +92,14 @@ export function CalculatorModal({ open, onClose, onConfirm, initialValue }: Calc
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
       <DialogContent
-        className="max-w-xs p-0 border-0 shadow-none bg-transparent overflow-hidden"
+        className="max-w-xs p-0 border-0 shadow-none bg-transparent overflow-hidden [&>button]:hidden"
         style={{ background: 'transparent', boxShadow: 'none' }}
       >
+        <DialogHeader className="sr-only">
+          <DialogTitle>Calculadora</DialogTitle>
+          <DialogDescription>Use a calculadora para definir o valor e confirmar em Usar valor.</DialogDescription>
+        </DialogHeader>
+
         {/* Glass card */}
         <div
           className="rounded-3xl p-5 flex flex-col gap-4"
@@ -106,6 +111,15 @@ export function CalculatorModal({ open, onClose, onConfirm, initialValue }: Calc
             boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
           }}
         >
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar calculadora"
+            className="absolute right-3 top-3 h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center"
+          >
+            <X size={15} />
+          </button>
+
           {/* Title */}
           <p className="text-white/60 text-xs font-semibold tracking-widest uppercase px-1">Calculadora</p>
 
@@ -127,36 +141,38 @@ export function CalculatorModal({ open, onClose, onConfirm, initialValue }: Calc
 
           {/* Buttons */}
           <div className="grid grid-cols-4 gap-2">
-            <button className={btnClr} onClick={handleClear}>C</button>
-            <button className={btnClr} onClick={handleBackspace}><Delete size={15} className="mx-auto" /></button>
-            <button className={btnOp}  onClick={() => handleOperator('÷')}>÷</button>
-            <button className={btnOp}  onClick={() => handleOperator('×')}>×</button>
+            <button type="button" className={btnClr} onClick={handleClear}>C</button>
+            <button type="button" className={btnClr} onClick={handleBackspace}><Delete size={15} className="mx-auto" /></button>
+            <button type="button" className={btnOp} onClick={() => handleOperator('÷')}>÷</button>
+            <button type="button" className={btnOp} onClick={() => handleOperator('×')}>×</button>
 
             {['7','8','9'].map(d => (
-              <button key={d} className={btnNum} onClick={() => handleDigit(d)}>{d}</button>
+              <button type="button" key={d} className={btnNum} onClick={() => handleDigit(d)}>{d}</button>
             ))}
-            <button className={btnOp} onClick={() => handleOperator('-')}>−</button>
+            <button type="button" className={btnOp} onClick={() => handleOperator('-')}>−</button>
 
             {['4','5','6'].map(d => (
-              <button key={d} className={btnNum} onClick={() => handleDigit(d)}>{d}</button>
+              <button type="button" key={d} className={btnNum} onClick={() => handleDigit(d)}>{d}</button>
             ))}
-            <button className={btnOp} onClick={() => handleOperator('+')}>+</button>
+            <button type="button" className={btnOp} onClick={() => handleOperator('+')}>+</button>
 
             {['1','2','3'].map(d => (
-              <button key={d} className={btnNum} onClick={() => handleDigit(d)}>{d}</button>
+              <button type="button" key={d} className={btnNum} onClick={() => handleDigit(d)}>{d}</button>
             ))}
             <button
+              type="button"
               className={`${btnOp} row-span-2`}
               style={{ gridRow: 'span 2 / span 2' }}
               onClick={handleEquals}
             >=</button>
 
-            <button className={`${btnNum} col-span-2`} onClick={() => handleDigit('0')}>0</button>
-            <button className={btnNum} onClick={handleDecimal}>,</button>
+            <button type="button" className={`${btnNum} col-span-2`} onClick={() => handleDigit('0')}>0</button>
+            <button type="button" className={btnNum} onClick={handleDecimal}>,</button>
           </div>
 
           {/* Confirm */}
           <button
+            type="button"
             onClick={handleConfirm}
             className="w-full h-12 rounded-2xl text-white font-semibold text-base cursor-pointer transition-all duration-150 active:scale-95"
             style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', boxShadow: '0 4px 20px rgba(99,102,241,0.4)' }}
