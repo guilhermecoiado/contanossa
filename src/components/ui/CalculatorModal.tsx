@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Delete, X } from 'lucide-react';
+import { Delete } from 'lucide-react';
 
 interface CalculatorModalProps {
   open: boolean;
@@ -83,7 +83,6 @@ export function CalculatorModal({ open, onClose, onConfirm, initialValue }: Calc
     }
   };
 
-  const btnBase = 'h-12 text-base font-medium rounded-xl';
   const btnBase2 = 'h-12 w-full text-base font-semibold rounded-2xl border-0 cursor-pointer transition-all duration-150 active:scale-95 select-none';
   const btnNum = `${btnBase2} bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm`;
   const btnOp  = `${btnBase2} bg-blue-400/40 hover:bg-blue-400/60 text-blue-100`;
@@ -92,7 +91,7 @@ export function CalculatorModal({ open, onClose, onConfirm, initialValue }: Calc
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
       <DialogContent
-        className="max-w-xs p-0 border-0 shadow-none bg-transparent overflow-hidden [&>button]:hidden"
+        className="max-w-xs p-0 border-0 shadow-none bg-transparent overflow-hidden"
         style={{ background: 'transparent', boxShadow: 'none' }}
       >
         <DialogHeader className="sr-only">
@@ -111,15 +110,6 @@ export function CalculatorModal({ open, onClose, onConfirm, initialValue }: Calc
             boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
           }}
         >
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar calculadora"
-            className="absolute right-3 top-3 h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center"
-          >
-            <X size={15} />
-          </button>
-
           {/* Title */}
           <p className="text-white/60 text-xs font-semibold tracking-widest uppercase px-1">Calculadora</p>
 

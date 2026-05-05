@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ValuesVisibilityContext } from '@/contexts/ValuesVisibilityContext';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -23,9 +23,14 @@ import {
   Tags,
   Download,
   Copy,
+  Landmark,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Label } from '@/components/ui/label';
+import { IncomeForm } from '@/components/forms/IncomeForm';
+import { ExpenseForm } from '@/components/forms/ExpenseForm';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -69,12 +74,47 @@ export function Sidebar() {
   const { valuesVisible, toggleValuesVisible } = useContext(ValuesVisibilityContext);
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
   const { currentMember, currentPlan, logout } = useAuth();
   const normalizedPlan = normalizePlan(currentPlan);
   const visibleNavigation = normalizedPlan === 'essential' ? navigationEssential : navigationFull;
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
+  const [isQuickIncomeOpen, setIsQuickIncomeOpen] = useState(false);
+  const [isQuickExpenseOpen, setIsQuickExpenseOpen] = useState(false);
+  const [quickExpenseMode, setQuickExpenseMode] = useState<'simple' | 'full'>('full');
+
+  const mobileTabs = [
+    { key: 'dashboard', label: 'Dash', href: '/', icon: LayoutDashboard, type: 'route' as const },
+    { key: 'banks', label: 'Bancos', href: '/banks', icon: Landmark, type: 'route' as const },
+    { key: 'income', label: 'Entrada', icon: TrendingUp, type: 'income' as const, accent: 'green' as const },
+    { key: 'expense', label: 'Saída', icon: TrendingDown, type: 'expense' as const, accent: 'red' as const },
+    { key: 'cards', label: 'Cartões', href: '/cards', icon: CreditCard, type: 'route' as const },
+    { key: 'family-health', label: 'Família', href: '/family-health', icon: Heart, type: 'route' as const },
+  ];
+
+  const isRouteActive = (href: string) => {
+    if (href === '/') return location.pathname === '/';
+    return location.pathname.startsWith(href);
+  };
+
+  const handleTabAction = (item: (typeof mobileTabs)[number]) => {
+    if (item.type === 'income') {
+      setIsQuickIncomeOpen(true);
+      return;
+    }
+
+    if (item.type === 'expense') {
+      setIsQuickExpenseOpen(true);
+      return;
+    }
+
+    if (item.href) {
+      navigate(item.href);
+      setIsMobileOpen(false);
+    }
+  };
 
   const handleCopyFamilyId = async () => {
     const familyPublicId = currentMember?.family_public_id;
@@ -145,17 +185,16 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile toggle */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn(
-          "fixed top-4 z-50 lg:hidden bg-blue-500/25 border border-blue-400/40 backdrop-blur-md text-blue-700 dark:text-blue-200 hover:bg-blue-500/35 rounded-xl shadow-sm transition-all duration-300",
-          isMobileOpen ? "left-[17rem]" : "left-3"
-        )}
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
-      >
-        {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </Button>
+      {!isMobileOpen && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed top-4 right-3 z-50 lg:hidden bg-blue-500/25 border border-blue-400/40 backdrop-blur-md text-blue-700 dark:text-blue-200 hover:bg-blue-500/35 rounded-xl shadow-sm transition-all duration-300"
+          onClick={() => setIsMobileOpen(true)}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      )}
 
       {/* Backdrop */}
       {isMobileOpen && (
@@ -168,10 +207,21 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-40 h-screen w-64 bg-card border-r border-border transition-transform duration-300 lg:translate-x-0",
-          isMobileOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed z-40 bg-card transition-transform duration-300 lg:top-0 lg:left-0 lg:h-screen lg:w-64 lg:border-r lg:border-border lg:translate-x-0",
+          "top-0 left-0 right-0 h-[88vh] rounded-b-2xl border-b border-border shadow-xl lg:rounded-none lg:border-b-0 lg:shadow-none",
+          isMobileOpen ? "translate-y-0 lg:translate-x-0" : "-translate-y-full lg:-translate-x-full"
         )}
       >
+        {isMobileOpen && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-3 z-50 lg:hidden bg-blue-500/25 border border-blue-400/40 backdrop-blur-md text-blue-700 dark:text-blue-200 hover:bg-blue-500/35 rounded-xl shadow-sm transition-all duration-300"
+            onClick={() => setIsMobileOpen(false)}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        )}
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
@@ -290,6 +340,134 @@ export function Sidebar() {
           </div>
         </div>
       </aside>
+
+      {/* Bottom Mobile Tab Bar */}
+      <div
+        className={cn(
+          "lg:hidden fixed left-1/2 -translate-x-1/2 z-50 w-[calc(100%-0.75rem)] max-w-3xl transition-all duration-200",
+          isMobileOpen ? "opacity-0 pointer-events-none translate-y-3" : "opacity-100"
+        )}
+        style={{ bottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+      >
+        <div
+          className={cn(
+            "rounded-[1.7rem] border backdrop-blur-md shadow-[0_10px_26px_-16px_rgba(2,6,23,0.75)] px-1.5 py-1.5",
+            theme === 'dark'
+              ? 'border-slate-700/80 bg-slate-900/85'
+              : 'border-white/80 bg-white/85'
+          )}
+        >
+          <div className="grid grid-cols-6 gap-0.5">
+            {mobileTabs.map((item) => {
+              const Icon = item.icon;
+              const isPrimary = item.type === 'income' || item.type === 'expense';
+              const isActive = item.type === 'income'
+                ? isRouteActive('/incomes') || isQuickIncomeOpen
+                : item.type === 'expense'
+                  ? isRouteActive('/expenses') || isQuickExpenseOpen
+                  : !!item.href && isRouteActive(item.href);
+
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => handleTabAction(item)}
+                  className={cn(
+                    'relative flex min-w-0 flex-col items-center justify-center rounded-2xl py-1.5 transition-all duration-300',
+                    'active:scale-[0.98] hover:scale-[1.01]',
+                    isActive && (
+                      theme === 'dark'
+                        ? 'bg-gradient-to-b from-slate-700/70 to-slate-800/70 shadow-inner'
+                        : 'bg-gradient-to-b from-white to-white/92 shadow-inner'
+                    ),
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'relative z-10 flex h-8 w-9 items-center justify-center rounded-xl transition-colors',
+                      isPrimary && item.accent === 'green' && 'text-emerald-500',
+                      isPrimary && item.accent === 'red' && 'text-red-500',
+                      !isPrimary && 'text-slate-600 dark:text-slate-300',
+                      isActive && !isPrimary && 'text-slate-900 dark:text-white',
+                      isActive && isPrimary && 'bg-background',
+                    )}
+                  >
+                    <Icon className={cn(isPrimary ? 'h-4.5 w-4.5' : 'h-4 w-4')} />
+                  </span>
+
+                  <span
+                    className={cn(
+                      'relative z-10 mt-0.5 text-center font-medium tracking-tight text-[10.5px] leading-tight whitespace-nowrap',
+                      isActive ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300',
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Add Income Modal */}
+      <Dialog open={isQuickIncomeOpen} onOpenChange={setIsQuickIncomeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Registrar Entrada</DialogTitle>
+            <DialogDescription className="sr-only">
+              Formulário para registrar uma nova entrada.
+            </DialogDescription>
+          </DialogHeader>
+          <IncomeForm onSuccess={() => setIsQuickIncomeOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Add Expense Modal */}
+      <Dialog open={isQuickExpenseOpen} onOpenChange={setIsQuickExpenseOpen}>
+        <DialogContent aria-describedby="quick-add-expense-desc">
+          <span id="quick-add-expense-desc" className="sr-only">Formulário para adicionar nova saída</span>
+          <DialogHeader>
+            <DialogTitle className="whitespace-nowrap text-base sm:text-lg leading-none pr-2 shrink-0">
+              {quickExpenseMode === 'simple' ? 'Registrar Despesa Simples' : 'Registrar Despesa'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 mb-3">
+            <Label>Modo de lançamento</Label>
+            <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/70 bg-muted/20 p-1">
+              <button
+                type="button"
+                onClick={() => setQuickExpenseMode('full')}
+                className={`h-9 rounded-md text-sm font-medium transition-colors ${
+                  quickExpenseMode === 'full'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                }`}
+              >
+                Completo
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickExpenseMode('simple')}
+                className={`h-9 rounded-md text-sm font-medium transition-colors ${
+                  quickExpenseMode === 'simple'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                }`}
+              >
+                Simples
+              </button>
+            </div>
+          </div>
+          <ExpenseForm
+            simpleMode={quickExpenseMode === 'simple'}
+            onSuccess={() => {
+              setIsQuickExpenseOpen(false);
+              setQuickExpenseMode('full');
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
