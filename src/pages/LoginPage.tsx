@@ -263,9 +263,9 @@ export default function LoginPage() {
                     </div>
                   </DialogContent>
                 </Dialog>
-                <p className="text-xs text-muted-foreground text-center mt-2 sm:mt-3">
+                {/* <p className="text-xs text-muted-foreground text-center mt-2 sm:mt-3">
                   Faça login com seu email.
-                </p>
+                </p> */}
               </form>
             </TabsContent>
             <TabsContent value="signup" className="mt-4 sm:mt-6">

@@ -17,6 +17,8 @@ import { toast } from 'sonner';
 import { isEssentialPlan } from '@/lib/plans';
 import { TagSelector } from '@/components/TagSelector';
 import { supabase } from '@/integrations/supabase/client';
+import { Calculator } from 'lucide-react';
+import { CalculatorModal } from '@/components/ui/CalculatorModal';
 
 const incomeSchema = z.object({
   income_source_id: z.preprocess((value) => (value === null ? undefined : value), z.string().optional()),
@@ -97,6 +99,7 @@ export function IncomeForm({ onSuccess, defaultValues }: IncomeFormProps) {
 
   // Para dialog de realizar
   const [realizeDialogOpen, setRealizeDialogOpen] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(false);
   const [realizeDate, setRealizeDate] = useState(() => getTodayLocalISO());
 
   const {
@@ -268,6 +271,7 @@ export function IncomeForm({ onSuccess, defaultValues }: IncomeFormProps) {
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
       <div className="space-y-2">
         <Label>Modo de lançamento</Label>
@@ -397,7 +401,17 @@ export function IncomeForm({ onSuccess, defaultValues }: IncomeFormProps) {
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="amount">Valor</Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="amount">Valor</Label>
+          <button
+            type="button"
+            onClick={() => setShowCalculator(true)}
+            className="ml-1 text-muted-foreground hover:text-primary transition-colors"
+            title="Abrir calculadora"
+          >
+            <Calculator size={16} />
+          </button>
+        </div>
         <Input
           id="amount"
           inputMode="numeric"
@@ -532,5 +546,12 @@ export function IncomeForm({ onSuccess, defaultValues }: IncomeFormProps) {
         </Button>
       )}
     </form>
+    <CalculatorModal
+      open={showCalculator}
+      onClose={() => setShowCalculator(false)}
+      onConfirm={(value) => setValue('amount', value)}
+      initialValue={watch('amount')}
+    />
+    </>
   );
 }

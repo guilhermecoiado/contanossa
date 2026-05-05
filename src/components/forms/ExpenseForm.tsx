@@ -22,6 +22,8 @@ import { toast } from 'sonner';
 import { isEssentialPlan } from '@/lib/plans';
 import { CategorySelector } from '@/components/CategorySelector';
 import { TagSelector } from '@/components/TagSelector';
+import { Calculator } from 'lucide-react';
+import { CalculatorModal } from '@/components/ui/CalculatorModal';
 
 const optionalString = z.preprocess(
   (value) => (value === null || value === undefined || value === '' ? undefined : String(value)),
@@ -108,6 +110,7 @@ export function ExpenseForm({ onSuccess, simpleMode = false, initialData }: Expe
   const [isResolvingRecipient, setIsResolvingRecipient] = useState(false);
   const [isResolvingCardRecipient, setIsResolvingCardRecipient] = useState(false);
   const [confirmTransferOpen, setConfirmTransferOpen] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(false);
   const [pendingTransferSubmission, setPendingTransferSubmission] = useState<ExpenseFormData | null>(null);
   const {
     register,
@@ -1129,6 +1132,14 @@ export function ExpenseForm({ onSuccess, simpleMode = false, initialData }: Expe
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Label htmlFor="amount">Valor</Label>
+          <button
+            type="button"
+            onClick={() => setShowCalculator(true)}
+            className="ml-1 text-muted-foreground hover:text-primary transition-colors"
+            title="Abrir calculadora"
+          >
+            <Calculator size={16} />
+          </button>
           {paymentType === 'card' && isInstallment && (
             <span className="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold ml-2">
               Obs: Valor referente à parcela
@@ -1264,6 +1275,12 @@ export function ExpenseForm({ onSuccess, simpleMode = false, initialData }: Expe
           </div>
         </DialogContent>
       </Dialog>
+      <CalculatorModal
+        open={showCalculator}
+        onClose={() => setShowCalculator(false)}
+        onConfirm={(value) => setValue('amount', value)}
+        initialValue={watch('amount')}
+      />
     </form>
   );
 }
