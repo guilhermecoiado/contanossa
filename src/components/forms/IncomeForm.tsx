@@ -57,6 +57,7 @@ type IncomeFormData = z.infer<typeof incomeSchema>;
 
 interface IncomeFormProps {
   onSuccess?: () => void;
+  initialFormMode?: 'full' | 'simple';
   defaultValues?: Partial<IncomeFormData> & {
     id?: string;
     member_id?: string;
@@ -78,7 +79,7 @@ function getTodayLocalISO() {
 }
 
 
-export function IncomeForm({ onSuccess, defaultValues }: IncomeFormProps) {
+export function IncomeForm({ onSuccess, initialFormMode = 'full', defaultValues }: IncomeFormProps) {
   const { currentMember, currentPlan } = useAuth();
   const isEssential = isEssentialPlan(currentPlan);
   const { data: members = [] } = useMembers();
@@ -94,7 +95,7 @@ export function IncomeForm({ onSuccess, defaultValues }: IncomeFormProps) {
   const [showCustomSource, setShowCustomSource] = useState(
     (defaultValues?.income_source_id === 'other') || (!!defaultValues?.custom_source)
   );
-  const [formMode, setFormMode] = useState<'full' | 'simple'>('full');
+  const [formMode, setFormMode] = useState<'full' | 'simple'>(initialFormMode);
 
 
   // Para dialog de realizar
@@ -170,6 +171,12 @@ export function IncomeForm({ onSuccess, defaultValues }: IncomeFormProps) {
       loadTags(defaultValues.id);
     }
   }, [defaultValues?.id]);
+
+  useEffect(() => {
+    if (!defaultValues?.id) {
+      setFormMode(initialFormMode);
+    }
+  }, [defaultValues?.id, initialFormMode]);
 
   const onSubmit = async (data: IncomeFormData) => {
     if (!selectedMemberId) {

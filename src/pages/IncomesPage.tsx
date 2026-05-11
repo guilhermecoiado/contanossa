@@ -24,7 +24,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -40,7 +40,9 @@ export default function IncomesPage() {
   const [incomeToDelete, setIncomeToDelete] = useState(null);
   const deleteIncome = useDeleteIncome();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [addIncomeMode, setAddIncomeMode] = useState<'full' | 'simple'>('full');
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const { currentMember, isAuthenticated } = useAuth();
@@ -163,6 +165,27 @@ export default function IncomesPage() {
     loadIncomeTags();
   }, [incomes]);
 
+  useEffect(() => {
+    if (searchParams.get('assistant') !== 'open') return;
+
+    const requestedMode = searchParams.get('mode') === 'simple' ? 'simple' : 'full';
+    setAddIncomeMode(requestedMode);
+    setIsAddDialogOpen(true);
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('assistant');
+    nextParams.delete('mode');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const handleAddDialogChange = (open: boolean) => {
+    setIsAddDialogOpen(open);
+
+    if (!open) {
+      setAddIncomeMode('full');
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <MainLayout>
@@ -237,7 +260,7 @@ export default function IncomesPage() {
               </Button>
             </div>
 
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <Dialog open={isAddDialogOpen} onOpenChange={handleAddDialogChange}>
               <DialogTrigger asChild>
                 <Button className="gradient-income text-income-foreground">
                   <Plus className="w-4 h-4 mr-2" />
@@ -248,7 +271,10 @@ export default function IncomesPage() {
                 <DialogHeader>
                   <DialogTitle>Registrar Entrada</DialogTitle>
                 </DialogHeader>
-                <IncomeForm onSuccess={() => setIsAddDialogOpen(false)} />
+                <IncomeForm
+                  initialFormMode={addIncomeMode}
+                  onSuccess={() => handleAddDialogChange(false)}
+                />
               </DialogContent>
             </Dialog>
           </div>

@@ -81,6 +81,7 @@ function getTodayLocalISO() {
 interface ExpenseFormProps {
   onSuccess?: () => void;
   simpleMode?: boolean;
+  initialExpenseType?: 'simples' | 'parcelado' | 'recorrente';
   initialData?: Partial<ExpenseFormData> & {
     id?: string;
     custom_category_id?: string | null;
@@ -93,7 +94,7 @@ interface ExpenseFormProps {
 }
 
 
-export function ExpenseForm({ onSuccess, simpleMode = false, initialData }: ExpenseFormProps) {
+export function ExpenseForm({ onSuccess, simpleMode = false, initialExpenseType = 'simples', initialData }: ExpenseFormProps) {
   const { currentMember, currentPlan } = useAuth();
   const isEssential = isEssentialPlan(currentPlan);
   const { data: members = [] } = useMembers();
@@ -178,7 +179,7 @@ export function ExpenseForm({ onSuccess, simpleMode = false, initialData }: Expe
   const [expenseType, setExpenseType] = useState<'simples' | 'parcelado' | 'recorrente'>(() => {
     if (initialData?.is_recurring) return 'recorrente';
     if (Number(initialData?.total_installments || 0) > 1) return 'parcelado';
-    return 'simples';
+    return initialExpenseType;
   });
   const effectiveExpenseType = isEssential ? 'simples' : expenseType;
   const isRecurring = effectiveExpenseType === 'recorrente';
@@ -201,6 +202,12 @@ export function ExpenseForm({ onSuccess, simpleMode = false, initialData }: Expe
       setExpenseType('simples');
     }
   }, [initialData?.id, initialData?.is_recurring, initialData?.total_installments]);
+
+  useEffect(() => {
+    if (!initialData?.id) {
+      setExpenseType(initialExpenseType);
+    }
+  }, [initialData?.id, initialExpenseType]);
 
   useEffect(() => {
     if (initialData?.date) {

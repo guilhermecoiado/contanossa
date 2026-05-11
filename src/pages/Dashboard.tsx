@@ -1,4 +1,4 @@
-import { useState, useContext, useMemo } from 'react';
+import { useMemo, useState, useContext } from 'react';
 import { ValuesVisibilityContext } from '@/contexts/ValuesVisibilityContext';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -13,7 +13,7 @@ import { useBrapiQuotes } from '@/hooks/useBrapi';
 import { useBcbRates } from '@/hooks/useBcbRates';
 import { useSyncBalance } from '@/hooks/useSyncBalance';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Eye, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { isEssentialPlan } from '@/lib/plans';
 
@@ -114,7 +114,7 @@ function calcConsortiumCurrentValue(
 }
 
 export default function Dashboard() {
-    const { valuesVisible, toggleValuesVisible } = useContext(ValuesVisibilityContext);
+  const { valuesVisible } = useContext(ValuesVisibilityContext);
   const navigate = useNavigate();
   const { currentMember, currentPlan } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);

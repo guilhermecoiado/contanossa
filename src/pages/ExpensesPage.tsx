@@ -17,7 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { Plus, TrendingDown, ChevronLeft, ChevronRight, ChevronDown, RotateCcw, Eye, Trash2, CheckCircle2, CreditCard, Banknote, ShoppingCart, Pencil } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUpdateBankBalance } from '@/hooks/useBankActions';
 import { useDeleteIncome } from '@/hooks/useIncomeActions';
 import { useBanks, useCards } from '@/hooks/useFinances';
@@ -62,8 +62,10 @@ export default function ExpensesPage() {
   const [isDeductDialogOpen, setIsDeductDialogOpen] = useState(false);
   const [pendingDeduct, setPendingDeduct] = useState(null);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [addExpenseMode, setAddExpenseMode] = useState<'simple' | 'full'>('full');
+  const [assistantExpenseType, setAssistantExpenseType] = useState<'simples' | 'parcelado' | 'recorrente'>('simples');
   const [isResetMonthDialogOpen, setIsResetMonthDialogOpen] = useState(false);
   const [isResettingMonth, setIsResettingMonth] = useState(false);
   const [resetInstallmentAction, setResetInstallmentAction] = useState<'delete-future' | 'keep-installments'>('delete-future');
@@ -960,6 +962,36 @@ export default function ExpensesPage() {
     setPage(1);
   }, [searchText]);
 
+  useEffect(() => {
+    if (searchParams.get('assistant') !== 'open') return;
+
+    const requestedMode = searchParams.get('mode') === 'simple' ? 'simple' : 'full';
+    const requestedExpenseType = searchParams.get('expenseType');
+    const resolvedExpenseType =
+      requestedExpenseType === 'parcelado' || requestedExpenseType === 'recorrente'
+        ? requestedExpenseType
+        : 'simples';
+
+    setAddExpenseMode(requestedMode);
+    setAssistantExpenseType(resolvedExpenseType);
+    setIsAddDialogOpen(true);
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('assistant');
+    nextParams.delete('mode');
+    nextParams.delete('expenseType');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const handleAddExpenseDialogChange = (open: boolean) => {
+    setIsAddDialogOpen(open);
+
+    if (!open) {
+      setAddExpenseMode('full');
+      setAssistantExpenseType('simples');
+    }
+  };
+
   return (
     <>
       <MainLayout>
@@ -1098,7 +1130,7 @@ export default function ExpensesPage() {
                   )}
                 </DialogContent>
               </Dialog>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <Dialog open={isAddDialogOpen} onOpenChange={handleAddExpenseDialogChange}>
                 <DialogTrigger asChild>
                   <Button className="gradient-expense text-expense-foreground w-full sm:w-auto">
                     <Plus className="w-4 h-4 mr-2" />
@@ -1141,9 +1173,9 @@ export default function ExpensesPage() {
                   </div>
                   <ExpenseForm
                     simpleMode={addExpenseMode === 'simple'}
+                    initialExpenseType={assistantExpenseType}
                     onSuccess={() => {
-                      setIsAddDialogOpen(false);
-                      setAddExpenseMode('full');
+                      handleAddExpenseDialogChange(false);
                     }}
                   />
                 </DialogContent>

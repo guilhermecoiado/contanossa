@@ -482,6 +482,7 @@ export type Database = {
       }
       members: {
         Row: {
+          account_setup_assistant_dismissed_at: string | null
           auth_user_id: string | null
           avatar_url: string | null
           created_at: string
@@ -496,6 +497,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          account_setup_assistant_dismissed_at?: string | null
           auth_user_id?: string | null
           avatar_url?: string | null
           created_at?: string
@@ -510,6 +512,7 @@ export type Database = {
           username: string
         }
         Update: {
+          account_setup_assistant_dismissed_at?: string | null
           auth_user_id?: string | null
           avatar_url?: string | null
           created_at?: string

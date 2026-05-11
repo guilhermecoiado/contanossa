@@ -24,6 +24,7 @@ import {
   Download,
   Copy,
   Landmark,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -39,6 +40,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { normalizePlan } from '@/lib/plans';
 import { useToast } from '@/hooks/use-toast';
+import { useAccountSetupAssistant } from '@/contexts/AccountSetupAssistantContext';
 
 const navigationEssential: Array<{ name: string; href: string; icon: any }> = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -76,6 +78,13 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentMember, currentPlan, logout } = useAuth();
+  const {
+    hasPendingSteps,
+    hasManualAssistantAccess,
+    pendingCount,
+    openAssistant,
+    isReady: isAssistantReady,
+  } = useAccountSetupAssistant();
   const normalizedPlan = normalizePlan(currentPlan);
   const visibleNavigation = normalizedPlan === 'essential' ? navigationEssential : navigationFull;
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -186,14 +195,27 @@ export function Sidebar() {
     <>
       {/* Mobile toggle */}
       {!isMobileOpen && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="fixed top-4 right-3 z-50 lg:hidden bg-blue-500/25 border border-blue-400/40 backdrop-blur-md text-blue-700 dark:text-blue-200 hover:bg-blue-500/35 rounded-xl shadow-sm transition-all duration-300"
-          onClick={() => setIsMobileOpen(true)}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+        <div className="fixed top-4 right-3 z-50 flex items-center gap-2 lg:hidden">
+          {isAssistantReady && hasPendingSteps && (
+            <button
+              type="button"
+              onClick={() => openAssistant()}
+              className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-sky-400/50 bg-sky-500/15 text-sky-700 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-sky-500/25 dark:text-sky-200"
+              title="Abrir assistente de configuração"
+            >
+              <Sparkles className="h-5 w-5" />
+              <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-sky-500 ring-2 ring-background" />
+            </button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="bg-blue-500/25 border border-blue-400/40 backdrop-blur-md text-blue-700 dark:text-blue-200 hover:bg-blue-500/35 rounded-xl shadow-sm transition-all duration-300"
+            onClick={() => setIsMobileOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </div>
       )}
 
       {/* Backdrop */}
@@ -207,9 +229,10 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed z-40 bg-card transition-transform duration-300 lg:top-0 lg:left-0 lg:h-screen lg:w-64 lg:border-r lg:border-border lg:translate-x-0",
+          "fixed z-40 bg-card transition-transform duration-300 lg:top-0 lg:left-0 lg:h-screen lg:w-[272px] lg:border-r lg:border-border lg:translate-x-0",
           "top-0 left-0 right-0 h-[88vh] rounded-b-2xl border-b border-border shadow-xl lg:rounded-none lg:border-b-0 lg:shadow-none",
-          isMobileOpen ? "translate-y-0 lg:translate-x-0" : "-translate-y-full lg:-translate-x-full"
+          isMobileOpen ? 'translate-y-0' : '-translate-y-full',
+          'lg:translate-y-0 lg:translate-x-0'
         )}
       >
         {isMobileOpen && (
@@ -254,6 +277,25 @@ export function Sidebar() {
 
           {/* Navigation */}
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            {isAssistantReady && hasPendingSteps && (
+              <button
+                type="button"
+                onClick={() => {
+                  openAssistant();
+                  setIsMobileOpen(false);
+                }}
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary hover:text-foreground"
+              >
+                <span className="relative flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 text-sky-600 dark:text-sky-300" />
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sky-500 px-1 text-[10px] font-semibold text-white">
+                    {pendingCount}
+                  </span>
+                </span>
+                <span className="flex-1 text-left whitespace-nowrap">Assistente de Config.</span>
+              </button>
+            )}
+
             {visibleNavigation.map((item) => {
               const isActive = location.pathname === item.href;
               return (
@@ -315,6 +357,17 @@ export function Sidebar() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
+                      {isAssistantReady && hasManualAssistantAccess && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            openAssistant();
+                            setIsMobileOpen(false);
+                          }}
+                        >
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          <span>Assistente/Dicas</span>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => void logout()}>
                         <LogOut className="w-4 h-4 mr-2" />
                         <span>Sair</span>

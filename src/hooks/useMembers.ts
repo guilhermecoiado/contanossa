@@ -75,6 +75,26 @@ export interface UpdateMemberData {
   existingSourceIds: string[];
 }
 
+export function useDismissAccountSetupAssistant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (memberId: string) => {
+      const { error } = await supabase
+        .from('members')
+        .update({
+          account_setup_assistant_dismissed_at: new Date().toISOString(),
+        })
+        .eq('id', memberId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+    },
+  });
+}
+
 export function useCreateMember() {
   const queryClient = useQueryClient();
   const { currentMember } = useAuth();

@@ -9,6 +9,7 @@ export interface Member {
   auth_user_id: string | null;
   family_id: string | null;
   family_public_id: string | null;
+  account_setup_assistant_dismissed_at: string | null;
   created_at: string;
   updated_at: string;
 }
